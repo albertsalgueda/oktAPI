@@ -1,17 +1,23 @@
 from flask import Flask
+from flask import render_template
+
+#Help: https://flask.palletsprojects.com/en/1.1.x/quickstart/#rendering-templates
 
 # EB looks for an 'application' callable by default.
+def hello():
+    return "This is the official Oktopus API, try /budget_allocation, /campaign to get sample data."
+
 application = Flask(__name__)
 
 @application.route("/")
-def hello():
-    return "This is the official Oktopus API, try /budget_allocation, /campaign to get sample data."
+def home():
+    return render_template("home.html")
 
 @application.route("/budget_allocation")
 def allocation():
     alloc = {
         "1": 0.25, 
-        "2": 10.3, 
+        "2": 0.3, 
         "3": 0.25,
         "4": 0.2
     }
