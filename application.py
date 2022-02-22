@@ -3,13 +3,16 @@ from flask import render_template
 
 #Help: https://flask.palletsprojects.com/en/1.1.x/quickstart/#rendering-templates
 
-# EB looks for an 'application' callable by default.
-def hello():
-    return "This is the official Oktopus API, try /budget_allocation, /campaign to get sample data."
+
 
 application = Flask(__name__)
 
+# EB looks for an 'application' callable by default.
 @application.route("/")
+def hello():
+    return "This is the official Oktopus API, try /budget_allocation, /campaign to get sample data."
+
+@application.route("/home")
 def home():
     return render_template("home.html")
 
