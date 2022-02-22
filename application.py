@@ -1,20 +1,19 @@
-from flask import Flask
-from flask import render_template
+from flask import Flask, render_template
 
 #Help: https://flask.palletsprojects.com/en/1.1.x/quickstart/#rendering-templates
 
 
 
-application = Flask(__name__)
+application = Flask(__name__,static_url_path='')
 
 # EB looks for an 'application' callable by default.
-@application.route("/")
+#@application.route("/")
 def hello():
     return "This is the official Oktopus API, try /budget_allocation, /campaign to get sample data."
 
-@application.route("/home")
-def home():
-    return render_template("home.html")
+@application.route('/home')
+def send_js():
+    return render_template('index.html',title ='Home')
 
 @application.route("/budget_allocation")
 def allocation():
