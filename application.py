@@ -7,7 +7,7 @@ from flask import Flask, render_template
 application = Flask(__name__,static_url_path='')
 
 # EB looks for an 'application' callable by default.
-#@application.route("/")
+@application.route("/")
 def hello():
     return "This is the official Oktopus API, try /budget_allocation, /campaign to get sample data."
 
