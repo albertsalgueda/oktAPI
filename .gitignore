@@ -156,4 +156,4 @@ vignettes/*.pdf
 
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
-.history
+.history.DS_Store
