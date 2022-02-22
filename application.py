@@ -1,29 +1,34 @@
 from flask import Flask
 
-# print a nice greeting.
-def say_hello(username = "dear username"):
-    return '<p>Hello %s!</p>\n' % username
-
-# some bits of text for the page.
-header_text = '''
-    <html>\n<head> <title>OKTOPUS</title> </head>\n<body>'''
-instructions = '''
-    <p> This is the official oktopus.io API, read the documentation below </p>\n'''
-home_link = '<p><a href="/">Back</a></p>\n'
-footer_text = '</body>\n</html>'
-
 # EB looks for an 'application' callable by default.
 application = Flask(__name__)
 
-@application.route("/allocate")
-def sample():
-    campaigns = {
-        1: 0.25, 
-        2: 10.3, 
-        3: 0.25,
-        4: 0.2
+@application.route("/")
+def hello():
+    return "This is the official Oktopus API, try /budget_allocation, /campaign to get sample data."
+
+@application.route("/budget_allocation")
+def allocation():
+    alloc = {
+        "1": 0.25, 
+        "2": 10.3, 
+        "3": 0.25,
+        "4": 0.2
     }
-    return campaigns
+    return alloc
+
+@application.route("/campaign")
+def campaign():
+    camp = {
+        "campaign_id": 1,
+        "budget": 100,
+        "spent": 10,
+        "impressions": 54345,
+        "conversions": 543,
+        "roi": 1.4
+    }
+    return camp
+
 
 # run the app.
 if __name__ == "__main__":
