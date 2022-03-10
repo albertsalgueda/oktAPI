@@ -3,9 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 #Help: https://flask.palletsprojects.com/en/1.1.x/quickstart/#rendering-templates
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
-db = SQLAlchemy(app)
+application = Flask(__name__)
+application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+db = SQLAlchemy(application)
 
 
 class Campaign(db.Model):
@@ -20,11 +20,11 @@ class Campaign(db.Model):
         return f"{self.id} - {self.roas}"
 
 
-@app.route('/')
+@application.route('/')
 def index():
     return "This is the official API of oktopus.io for Budget"
 
-@app.route('/campaigns')
+@application.route('/campaigns')
 def campaigns():
     campaigns = Campaign.query.all()
     output = []
@@ -40,7 +40,7 @@ def campaigns():
         output.append(campaign_data)
     return {"campaigns":output}
 
-@app.route('/campaigns',methods=['POST'])
+@application.route('/campaigns',methods=['POST'])
 def add_campaigns():
     data = request.get_json(force=True)
     campaign = Campaign(
@@ -55,12 +55,12 @@ def add_campaigns():
     db.session.commit()
     return "Successfully added."
 
-@app.route('/campaigns/<id>')
+@application.route('/campaigns/<id>')
 def get_campaign(id):
     campaign = Campaign.query.get_or_404(id)
     return {"id":campaign.id,"budget":campaign.budget,"spent":campaign.spent,"impressions":campaign.impressions,"conversions":campaign.conversions,"roas":campaign.roas}
 
-@app.route('/campaigns/<id>',methods=['DELETE'])
+@application.route('/campaigns/<id>',methods=['DELETE'])
 def delete(id):
     campaign = Campaign.query.get(id)
     if campaign is None:
@@ -73,5 +73,5 @@ def delete(id):
 if __name__ == "__main__":
     # Setting debug to True enables debug output. This line should be
     # removed before deploying a production app.
-    app.debug = False
-    app.run()
+    application.debug = False
+    application.run()
