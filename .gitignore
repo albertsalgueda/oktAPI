@@ -127,6 +127,8 @@ dmypy.json
 
 # RStudio files
 .Rproj.user/
+venv
+okt
 
 # produced vignettes
 vignettes/*.html
@@ -157,3 +159,4 @@ vignettes/*.pdf
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
 .history.DS_Store
+venv
