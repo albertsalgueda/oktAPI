@@ -3,26 +3,86 @@ from flask_sqlalchemy import SQLAlchemy
 
 #Help: https://flask.palletsprojects.com/en/1.1.x/quickstart/#rendering-templates
 
-application = Flask(__name__)
+application = Flask(__name__,static_url_path='')
 application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 db = SQLAlchemy(application)
 
 
-class Campaign(db.Model):
+class Campaign(db.Model,):
     id = db.Column(db.Integer,primary_key=True)
-    budget = db.Column(db.Float)
-    spent = db.Column(db.Float)
+    budget = db.Column(db.Float) #represents daily budget
+    spent = db.Column(db.Float) #represents total spent
     impressions = db.Column(db.Integer)
     conversions = db.Column(db.Integer)
     roas = db.Column(db.Float)
 
     def __repr__(self):
-        return f"{self.id} - {self.roas}"
+        return f"Campaign id: {self.id} - Daily budget: {self.budget } - Current ROAS:{self.roas}"
+
+class CampaignGroup(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    budget = db.Column(db.Float)
+    time = db.Column(db.Integer)
+    campaigns = db.Column(db.String(80),unique=True,nullable=False)
+
+    def __repr__(self):
+        return f"CampaignGroup  with id: {self.id} - Contains campaigns: {self.campaigns}"
 
 
 @application.route('/')
 def index():
-    return "This is the official API of oktopus.io for Budget"
+    db.create_all()
+    return "This is the official API of oktopus.io for Budget Optimization"
+
+@application.route('/campaign_group')
+def campaign_group():
+    campaign_groups = CampaignGroup.query.all()
+    if campaign_groups is None:
+        return {'error':'group does not exist'}
+    output = []
+    for campaign_group in campaign_groups:
+        campaign_data = {
+            "id":campaign_group.id,
+            "budget":campaign_group.budget,
+            "campaigns": campaign_group.campaigns
+            }
+        output.append(campaign_data)
+    return {"campaigns":output}
+
+@application.route('/campaign_group',methods=['POST'])
+def create_group():
+    data = request.get_json(force=True)
+    group = CampaignGroup(
+        id = data['id'],
+        budget = data['budget'],
+        time = data['time'],
+        campaigns = data['campaigns'])
+
+    #TODO -> validate that campaigns exist
+
+    db.session.add(group)
+    db.session.commit()
+    return "Campaign group successfully created."
+
+@application.route('/campaign_group/<id>')
+def get_group(id):
+    campaign_group = CampaignGroup.get_or_404(id)
+    group = {
+            "id":campaign_group.id,
+            "budget":campaign_group.budget,
+            "campaigns":campaign_group.campaigns,
+            }
+    return group
+
+@application.route('/campaign_group/<id>',methods=['DELETE'])
+def delete_group(id):
+    group = CampaignGroup.query.get(id)
+    if group is None:
+        return {'error':'campaign does not exist'}
+    db.session.delete(group)
+    db.session.commit()
+    return "Successfully deleted."
+
 
 @application.route('/campaigns')
 def campaigns():
@@ -39,6 +99,7 @@ def campaigns():
             }
         output.append(campaign_data)
     return {"campaigns":output}
+
 
 @application.route('/campaigns',methods=['POST'])
 def add_campaigns():
