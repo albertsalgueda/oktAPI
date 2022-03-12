@@ -1,16 +1,22 @@
+from asyncio.format_helpers import _format_callback_source
 from flask import Flask, session, redirect, url_for, escape, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_httpauth import HTTPBasicAuth
 
+from mab import *
 #Help: https://flask.palletsprojects.com/en/1.1.x/quickstart/#rendering-templates
 # export FLASK_APP=application.py
 application = Flask(__name__,static_url_path='')
 application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 db = SQLAlchemy(application)
 
-session = {}
-session['username'] = 'admin'
+auth = HTTPBasicAuth()
 
-class Campaign(db.Model,):
+USER_DATA = {
+    "admin": "topsecret"
+}
+
+class Campaign(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     budget = db.Column(db.Float) #represents daily budget
     spent = db.Column(db.Float) #represents total spent
@@ -18,24 +24,12 @@ class Campaign(db.Model,):
     conversions = db.Column(db.Integer)
     roas = db.Column(db.Float)
 
-    def __init__(self,id,budget,spent,impressions,conversions,roas):
-        #falta determinar como podemos saber el tiempo que lleva la campaña 
-        self.id = id    
-        self.budget = budget #daily budget
-        self.spent = spent
-        self.impressions = impressions
-        self.conversions = conversions
-        self.roi = roas
-
 class CampaignGroup(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     budget = db.Column(db.Float)
     time = db.Column(db.Integer)
     campaigns = db.Column(db.String(80),unique=True,nullable=False)
-    
-    
-
-    
+    current_time = db.Column(db.Integer)  
 
 @application.route('/')
 def index():
@@ -43,25 +37,7 @@ def index():
     return "This is the official API of oktopus.io for Budget Optimization"
 
 
-@application.route('/login', methods = ['GET', 'POST'])
-def login():
-   if request.method == 'POST':
-      session['username'] = request.form['username']
-      return redirect(url_for('index'))
-   return '''
-   <form action = "" method = "post">
-      <p><input type = text name = username/></p>
-      <p<<input type = submit value = Login/></p>
-   </form>	
-'''
-@application.route('/logout')
-def logout():
-   # remove the username from the session if it is there
-   session.pop('username', None)
-   return redirect(url_for('index'))
-
-
-@application.route('/campaign_group')
+@application.route('/group')
 def campaign_group():
     campaign_groups = CampaignGroup.query.all()
     if campaign_groups is None:
@@ -77,7 +53,7 @@ def campaign_group():
         output.append(campaign_data)
     return {"campaigns":output}
 
-@application.route('/campaign_group',methods=['POST'])
+@application.route('/group',methods=['POST'])
 def create_group():
     data = request.get_json(force=True)
     group = CampaignGroup(
@@ -87,12 +63,11 @@ def create_group():
         campaigns = data['campaigns'])
 
     #TODO -> validate that campaigns exist
-
     db.session.add(group)
     db.session.commit()
     return "Campaign group successfully created."
 
-@application.route('/campaign_group/<id>')
+@application.route('/group/<id>')
 def get_group(id):
     campaign_group = CampaignGroup.get_or_404(id)
     group = {
@@ -102,15 +77,21 @@ def get_group(id):
             }
     return group
 
-@application.route('/campaign_group/<id>',methods=['DELETE'])
+@application.route('/group/<id>',methods=['DELETE'])
 def delete_group(id):
     group = CampaignGroup.query.get(id)
     if group is None:
-        return {'error':'campaign does not exist'}
+        return {'error':'campaign group does not exist'}
     db.session.delete(group)
     db.session.commit()
     return "Successfully deleted."
 
+@application.route('/group/<id>/budget',methods=['GET'])
+def get_budget_allocation(id):
+    group = CampaignGroup.query.get(id)
+    if group is None:
+        return {'error':'campaign group does not exist'}
+    return group.budget_allocation
 
 @application.route('/campaigns')
 def campaigns():
