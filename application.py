@@ -1,9 +1,10 @@
 from asyncio.format_helpers import _format_callback_source
+from stat import ST_ATIME
 from flask import Flask, session, redirect, url_for, escape, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_httpauth import HTTPBasicAuth
 
-from mab import *
+from main import *
 #Help: https://flask.palletsprojects.com/en/1.1.x/quickstart/#rendering-templates
 # export FLASK_APP=application.py
 application = Flask(__name__,static_url_path='')
@@ -24,11 +25,12 @@ class Campaign(db.Model):
     conversions = db.Column(db.Integer)
     roas = db.Column(db.Float)
 
-class CampaignGroup(db.Model):
+class State(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     budget = db.Column(db.Float)
     time = db.Column(db.Integer)
-    campaigns = db.Column(db.String(80),unique=True,nullable=False)
+    #TODO
+    #campaigns = db.Column(db.String(80),unique=True,nullable=False) 
     current_time = db.Column(db.Integer)  
 
 @application.route('/')
@@ -39,7 +41,7 @@ def index():
 
 @application.route('/group')
 def campaign_group():
-    campaign_groups = CampaignGroup.query.all()
+    campaign_groups = State.query.all()
     if campaign_groups is None:
         return {'error':'group does not exist'}
     output = []
@@ -56,11 +58,11 @@ def campaign_group():
 @application.route('/group',methods=['POST'])
 def create_group():
     data = request.get_json(force=True)
-    group = CampaignGroup(
+    group = State(
         id = data['id'],
         budget = data['budget'],
         time = data['time'],
-        campaigns = data['campaigns'])
+        campaigns = data['campaigns']) #TODO HERE
 
     #TODO -> validate that campaigns exist
     db.session.add(group)
@@ -69,7 +71,7 @@ def create_group():
 
 @application.route('/group/<id>')
 def get_group(id):
-    campaign_group = CampaignGroup.get_or_404(id)
+    campaign_group = State.get_or_404(id)
     group = {
             "id":campaign_group.id,
             "budget":campaign_group.budget,
@@ -79,7 +81,7 @@ def get_group(id):
 
 @application.route('/group/<id>',methods=['DELETE'])
 def delete_group(id):
-    group = CampaignGroup.query.get(id)
+    group = ST_ATIME.query.get(id)
     if group is None:
         return {'error':'campaign group does not exist'}
     db.session.delete(group)
@@ -88,10 +90,14 @@ def delete_group(id):
 
 @application.route('/group/<id>/budget',methods=['GET'])
 def get_budget_allocation(id):
-    group = CampaignGroup.query.get(id)
+    group = State.query.get(id)
     if group is None:
         return {'error':'campaign group does not exist'}
-    return group.budget_allocation
+    return group.budget_allocationç
+
+
+@application.route('/group/<id>/next',methods=['GET'])
+#TODO CALLS AI.act() returns a budget allocation --> self.budget_allocation , and current time step ( self.current_time) 
 
 @application.route('/campaigns')
 def campaigns():
