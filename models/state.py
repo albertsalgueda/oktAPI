@@ -14,7 +14,7 @@ class StateIn(BaseModel):
     @validator("id")
     def id_must_be_unique(cls, v):
         if (
-            connector.collection(Collections.CAMPAIGN).find_one({"id": v})
+            connector.collection(Collections.STATE).find_one({"id": v})
             is not None
         ):
             raise ValueError(f"{v} already exist")
@@ -23,7 +23,14 @@ class StateIn(BaseModel):
 
     budget: float = Field(None)
     time: int = Field(None)
-    campaigns: List[CampaignDB] = Field([])
+    campaigns: List = Field([])
+
+    @validator("campaigns")
+    def validate_campaigns(cls, v):
+        for ids in v:
+            if connector.collection(Collections.CAMPAIGN).find_one({"id": ids}) is None:
+                raise ValueError(f"This id {ids} with campaign does not exist.")
+        return v
     current_time: int = Field(None)
     current_budget: float = Field(None)
     history: Dict = Field({})
@@ -41,13 +48,21 @@ class StateUpdate(BaseModel):
 
     @validator("id")
     def id_must_be_exist(cls, v):
-        if connector.collection(Collections.CAMPAIGN).find_one({"id": v}) is None:
+        if connector.collection(Collections.STATE).find_one({"id": v}) is None:
             raise ValueError(f"{v} Should be exist")
         return v
 
     budget: float = Field(None)
     time: int = Field(None)
-    campaigns: List[CampaignDB] = Field([])
+    campaigns: List = Field([])
+
+    @validator("campaigns")
+    def validate_campaigns(cls, v):
+        for ids in v:
+            if connector.collection(Collections.CAMPAIGN).find_one({"id": ids}) is None:
+                raise ValueError(f"This id {ids} with campaign does not exist.")
+        return v
+
     current_time: int = Field(None)
     current_budget: float = Field(None)
     history: Dict = Field({})
@@ -64,7 +79,7 @@ class StateOut(BaseModel):
     id: int = Field(...)
     budget: float = Field(None)
     time: int = Field(None)
-    campaigns: List[CampaignDB] = Field([])
+    campaigns: List = Field([])
     current_time: int = Field(None)
     current_budget: float = Field(None)
     history: Dict = Field({})
@@ -81,7 +96,7 @@ class StateDB(BaseModel):
     id: int = Field(...)
     budget: float = Field(...)
     time: int = Field(...)
-    campaigns: List[CampaignDB] = Field([])
+    campaigns: List = Field([])
     current_time: int = Field(...)
     current_budget: float = Field(None)
     history: Dict = Field({})
@@ -99,6 +114,6 @@ class StateDelete(BaseModel):
 
     @validator("id")
     def id_must_be_exist(cls, v):
-        if connector.collection(Collections.CAMPAIGN).find_one({"id": v}) is None:
+        if connector.collection(Collections.STATE).find_one({"id": v}) is None:
             raise ValueError(f"{v} not exist")
         return v
