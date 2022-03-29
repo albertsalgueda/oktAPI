@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, validator
-from typing import List
+from typing import Dict, List
 from utils.db_connector import DBConnector, Collections
 from .campains import CampaignDB
 
@@ -25,6 +25,13 @@ class StateIn(BaseModel):
     time: int = Field(None)
     campaigns: List[CampaignDB] = Field([])
     current_time: int = Field(None)
+    current_budget: float = Field(None)
+    history: Dict = Field({})
+    budget_allocation: Dict = Field({})
+    remaining: float = Field(None)
+    step: float = 0.005
+    k_arms: int = Field(None)
+    stopped: List = Field(None)
 
 
 class StateUpdate(BaseModel):
@@ -42,6 +49,13 @@ class StateUpdate(BaseModel):
     time: int = Field(None)
     campaigns: List[CampaignDB] = Field([])
     current_time: int = Field(None)
+    current_budget: float = Field(None)
+    history: Dict = Field({})
+    budget_allocation: Dict = Field({})
+    remaining: float = Field(None)
+    step: float = 0.005
+    k_arms: int = Field(None)
+    stopped: List = Field(None)
 
 
 class StateOut(BaseModel):
@@ -52,6 +66,13 @@ class StateOut(BaseModel):
     time: int = Field(None)
     campaigns: List[CampaignDB] = Field([])
     current_time: int = Field(None)
+    current_budget: float = Field(None)
+    history: Dict = Field({})
+    budget_allocation: Dict = Field({})
+    remaining: float = Field(None)
+    step: float = 0.005
+    k_arms: int = Field(None)
+    stopped: List = Field(None)
 
 
 class StateDB(BaseModel):
@@ -62,6 +83,13 @@ class StateDB(BaseModel):
     time: int = Field(...)
     campaigns: List[CampaignDB] = Field([])
     current_time: int = Field(...)
+    current_budget: float = Field(None)
+    history: Dict = Field({})
+    budget_allocation: Dict = Field({})
+    remaining: float = Field(None)
+    step: float = 0.005
+    k_arms: int = Field(None)
+    stopped: List = Field(None)
 
 
 class StateDelete(BaseModel):

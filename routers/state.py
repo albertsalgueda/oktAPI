@@ -1,6 +1,8 @@
+from os import stat
 from fastapi import APIRouter, Security, Query
 from typing import List
 
+from main import AI
 from .auth import get_current_user
 from utils.db_connector import DBConnector, Collections
 from models.state import (
@@ -11,6 +13,7 @@ from models.state import (
     StateUpdate
 )
 from models.user import User
+
 
 router = APIRouter()
 connector = DBConnector()
@@ -69,21 +72,26 @@ async def get_one_state(
 )
 async def get_budget(
     id: int,
+    budget: float,
+    time: int,
     user: User = Security(get_current_user, scopes=["read"]),
-    ):
-    pass
-    # TODO
-    # if ai is not created ai = AI(state, 10,10)
-    #  ai.act() and then state.budget_allocation 
+):
+    """add method."""
+    state = connector.collection(Collections.STATE).find_one({"id": id})
+    state = StateOut(**state)
+    ai = AI(state, budget, time)
+    optimistic_agent_result = ai.act()
+    total_rewards = sum(optimistic_agent_result["rewards"])
+    return total_rewards
+    #TODO. What should we return on this?
 
 
-@router.get(
-    '/state/{id}/budget', description="Get budget.", tags=["state"]
-    )
+@router.get('/state/{id}/budget', description="Get budget.", tags=["state"])
 def get_budget_allocation(
     id: int,
     user: User = Security(get_current_user, scopes=["read"]),
 ):
     """Return budget allocation."""
-    pass
-    # TODO state.budget_allocation
+    state = connector.collection(Collections.STATE).find_one({"id": id})
+    state = StateOut(**state)
+    return state.budget_allocation
