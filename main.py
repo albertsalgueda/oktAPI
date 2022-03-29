@@ -1,11 +1,16 @@
 import random
+from models.campains import CampaignDB
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
+from utils.db_connector import DBConnector, Collections
+
+connector = DBConnector()
 
 class AI(object):
 
   def __init__(self, env, initial_q, initial_visits):
+    print(env)
     self.env = env
     self.initial_q = initial_q
     self.initial_visits = initial_visits
@@ -64,7 +69,10 @@ class State(Campaign):
     def __init__(self,budget,total_time,campaigns,initial_allocation=0):
         self.budget = budget
         self.time = total_time
-        self.campaigns = campaigns
+        d = []
+        for campaign in campaigns:
+            d.append(CampaignDB(**(connector.collection(Collections.CAMPAIGN).find_one({"id": campaign}))))
+        self.campaigns = d
         self.current_time = 0
         self.current_budget = self.budget/self.time
         #dictionary that contains all states, where the key is a timestamp

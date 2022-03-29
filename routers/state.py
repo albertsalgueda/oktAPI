@@ -1,4 +1,3 @@
-from os import stat
 from fastapi import APIRouter, Security, Query
 from typing import List
 
@@ -13,6 +12,7 @@ from models.state import (
     StateUpdate
 )
 from models.user import User
+from main import State
 
 
 router = APIRouter()
@@ -79,6 +79,7 @@ async def get_budget(
     """add method."""
     state = connector.collection(Collections.STATE).find_one({"id": id})
     state = StateOut(**state)
+    state = State(budget, time, state.campaigns, 0)
     ai = AI(state, budget, time)
     optimistic_agent_result = ai.act()
     total_rewards = sum(optimistic_agent_result["rewards"])
