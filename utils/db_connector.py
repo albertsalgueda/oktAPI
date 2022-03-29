@@ -31,3 +31,4 @@ class DBConnector(metaclass=Singleton):
     def collection(self, name: Collections) -> Collection:
         
         return self.database[name]
+

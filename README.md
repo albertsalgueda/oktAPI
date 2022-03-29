@@ -21,3 +21,12 @@
 
 ### Open the url with /api and login with admin/admin.
 
+# DOCS
+
+### /budget allocation 
+{'budget allocation': state.budget:allocation }
+
+### /next 
+It requires nothing. 
+It should return:
+{'remaining budget': state.remaining, 'current time': state.current_time, 'budget allocation': state.budget:allocation }
