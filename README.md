@@ -15,7 +15,7 @@
 
 ## Step 4.
 
-### uvicorn fast:app (Make sure you are in OktFastAPI folder.)
+### uvicorn fast:app (Make sure you are in OktAPI folder.)
 
 ## Step 5.
 

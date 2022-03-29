@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI
 API_PREFIX = "/api"
 
 app = FastAPI(
-    title="Budget API",
+    title="Budget Optimization API",
     version="1.0.0",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json"
