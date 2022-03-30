@@ -32,13 +32,10 @@ class StateIn(BaseModel):
                 raise ValueError(f"This id {ids} with campaign does not exist.")
         return v
     current_time: int = Field(None)
-    current_budget: float = Field(None)
     history: Dict = Field({})
     budget_allocation: Dict = Field({})
-    remaining: float = Field(None)
     step: float = 0.005
-    k_arms: int = Field(None)
-    stopped: List = Field(None)
+    stopped: List = Field([])
 
 
 class StateUpdate(BaseModel):

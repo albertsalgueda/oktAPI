@@ -1,5 +1,6 @@
 import random
 from models.campains import CampaignDB
+from models.state import StateDB
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
@@ -95,13 +96,13 @@ class Campaign:
 
 class State(Campaign):
     def __init__(
-        self, id, budget, total_time, campaigns, initial_allocation=0
+        self, state:StateDB, initial_allocation=0
     ):
-        self.id = id
-        self.budget = budget
-        self.time = total_time
+        self.id = state.id
+        self.budget = state.budget
+        self.time = state.time
         d = []
-        for campaign in campaigns:
+        for campaign in state.campaigns:
             d.append(
                 CampaignDB(
                     **(
@@ -112,18 +113,18 @@ class State(Campaign):
                 )
             )
         self.campaigns = d
-        self.current_time = 0
-        self.current_budget = self.budget / self.time
+        self.current_time = state.current_time
+        self.current_budget = state.current_budget
         # dictionary that contains all states, where the key is a timestamp
-        self.history = {}
-        self.budget_allocation = {}
-        self.remaining = budget
+        self.history = state.history
+        self.budget_allocation = state.budget_allocation
+        self.remaining = state.remaining
 
-        self.step = 0.005
+        self.step = state.step
 
-        self.k_arms = len(campaigns)
+        self.k_arms = state.k_arms
 
-        self.stopped = []
+        self.stopped = state.stopped
         if initial_allocation == 0:
             self.initial_allocation()
         else:
@@ -146,7 +147,7 @@ class State(Campaign):
         rewards = []
         for campaign in self.campaigns:
             rewards.append(
-                campaign.roi
+                campaign.roas
                 * self.current_budget
                 * self.budget_allocation[str(campaign.id)]
             )
@@ -175,23 +176,23 @@ class State(Campaign):
         population = list(range(len(self.campaigns)))
         step = self.step
         temp_budget = copy.deepcopy(self.budget_allocation)
-        temp_budget[arm] += step
+        temp_budget[str(arm)] += step
         q_values = q_values.tolist()
         # SOLUTION TO BUG ID 7
         # print(f"---{len(population)-len(self.stopped)}")
         # time.sleep(0.01)
         if len(population) - len(self.stopped) == 1:
-            temp_budget[arm] = 1
+            temp_budget[str(arm)] = 1
         else:
             # if we have no data, randomly decrease an campaign
             if all(v == 0 for v in q_values):
                 dec = random.randint(0, len(self.campaigns) - 1)
                 if dec != arm:
-                    temp_budget[dec] -= step
+                    temp_budget[str(dec)] -= step
                 else:
                     while dec == arm:
                         dec = random.randint(0, len(self.campaigns) - 1)
-                    temp_budget[dec] -= step
+                    temp_budget[str(dec)] -= step
             # if we have data, take a stochastic approach
             else:
                 norm = [float(i) / sum(q_values) for i in q_values]
@@ -205,17 +206,17 @@ class State(Campaign):
                 # that would result in no action, I'll ignore that option
                 if dec != arm and dec not in self.stopped:
                     # TODO SOLUTION OF BUG 1
-                    if temp_budget[dec] < step:
-                        temp_budget[arm] -= temp_budget[dec]
+                    if temp_budget[str(dec)] < step:
+                        temp_budget[str(arm)] -= temp_budget[str(dec)]
                         # temp_budget[arm] -= step
-                        temp_budget[dec] = 0
+                        temp_budget[str(dec)] = 0
                         print(
                             f"##### Campaign {dec} was stopped completely ###"
                         )
                         # TODO delete campaign from the state ( make it ignore it )
                         self.stopped.append(dec)
                     else:
-                        temp_budget[dec] -= step
+                        temp_budget[str(dec)] -= step
                 else:
                     while True:
                         dec = int(
@@ -230,16 +231,16 @@ class State(Campaign):
                         else:
                             break
                     # SOLUTION OF BUG 1
-                    if temp_budget[dec] < step:
-                        temp_budget[arm] -= temp_budget[dec]
-                        temp_budget[arm] -= step
-                        temp_budget[dec] = 0
+                    if temp_budget[str(dec)] < step:
+                        temp_budget[str(arm)] -= temp_budget[str(dec)]
+                        temp_budget[str(arm)] -= step
+                        temp_budget[str(dec)] = 0
                         print(
                             f"##### Campaign {dec} was stopped completely ###"
                         )
                         self.stopped.append(dec)
                     else:
-                        temp_budget[dec] -= step
+                        temp_budget[str(dec)] -= step
                 print(
                     f"Ai has decreased campaign {dec} given probs {decrease_prob}"
                 )
