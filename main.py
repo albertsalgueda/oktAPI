@@ -1,6 +1,7 @@
+from http.client import HTTPException
 import random
 from models.campains import CampaignDB
-from models.state import StateDB
+from models.state import StateDB, StateUpdate
 import numpy as np
 import matplotlib.pyplot as plt
 import copy
@@ -45,7 +46,27 @@ class AI(object):
         )
         self.cum_rewards.append(current_estimate)
         old_estimate = current_estimate
-
+        
+        cam = []
+        for campaign in self.env.campaigns:
+            cam.append(campaign.id)
+        state_update = StateUpdate(
+            id=self.env.id,
+            budget=self.env.budget,
+            time=self.env.time,
+            campaigns=cam,
+            current_time=self.env.current_time,
+            current_budget=self.env.current_budget,
+            history=self.env.history,
+            budget_allocation=self.env.budget_allocation,
+            remaining=self.env.remaining,
+            step=self.env.step,
+            k_arms=self.env.k_arms,
+            stopped=self.env.stopped
+        )
+        connector.collection(Collections.STATE).replace_one(
+            {"id": self.env.id}, state_update.dict()
+        )
         return {
             "arm_counts": self.arm_counts,
             "rewards": self.rewards,
@@ -137,7 +158,7 @@ class State(Campaign):
         self.current_time += 1
         self.remaining -= self.current_budget
         if self.remaining <= 0:
-            raise Exception("No budget left")
+            raise HTTPException(400, "No budget left")
         # increase the capacity of an agent to take significant budget decisions
         self.step *= 1.001
 
