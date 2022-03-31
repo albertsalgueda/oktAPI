@@ -79,20 +79,21 @@ async def get_budget(
         return {"success": False}
     state1 = StateOut(**state)
     # inital_allocation = [0.25, 0.25, 0.5]
-    state = State(
-        state1
-    )
     try:
-        ai = AI(state, state1.budget, state1.time)
+        state = State(
+            state1
+        )
+        ai = AI(id, state, state1.budget, state1.time)
         d = ai.act()
+        print(d)
         state = connector.collection(Collections.STATE).find_one({"id": id})
-        state1 = StateOut(**state)
+        state2 = StateOut(**state)
     except Exception as err:
-        return {"msg": f"{err}"}
+        return {"message": f"{err}"}
     return {
-        "remaining budget": state1.remaining,
-        "current time": state1.current_time,
-        "budget allocation": state1.budget_allocation,
+        "remaining budget": state2.remaining,
+        "current time": state2.current_time,
+        "budget allocation": state2.budget_allocation,
     }
 
 @router.get("/state/{id}/budget", description="Get budget allocation.", tags=["state"])

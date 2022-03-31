@@ -11,6 +11,7 @@ class Collections(str, Enum):
     USERS = "users"
     CAMPAIGN = "campaign"
     STATE = "state"
+    AI = "ai"
 
 
 class DBConnector(metaclass=Singleton):

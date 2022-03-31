@@ -6,23 +6,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 from utils.db_connector import DBConnector, Collections
+from bson.binary import Binary
+import pickle
 
 connector = DBConnector()
 
-
 class AI(object):
-    def __init__(self, env, initial_q, initial_visits):
-        print(env)
-        self.env = env
-        self.initial_q = initial_q
-        self.initial_visits = initial_visits
+    def __init__(self, id, env, initial_q, initial_visits):
+        k = connector.collection(Collections.AI).find_one({"id": env.id})
+        if k is None:
+            self.id = id,
+            self.env = env
+            self.initial_q = initial_q
+            self.initial_visits = initial_visits
 
-        self.q_values = np.ones(self.env.k_arms) * self.initial_q
-        self.arm_counts = np.ones(self.env.k_arms) * self.initial_visits
-        self.arm_rewards = np.zeros(self.env.k_arms)
+            self.q_values = np.ones(self.env.k_arms) * self.initial_q
+            self.arm_counts = np.ones(self.env.k_arms) * self.initial_visits
+            self.arm_rewards = np.zeros(self.env.k_arms)
+            
 
-        self.rewards = [0.0]
-        self.cum_rewards = [0.0]
+            self.rewards = [0.0]
+            self.cum_rewards = [0.0]
+        else:
+            self.id = k["id"],
+            self.env = env
+            self.initial_q = k["initial_q"]
+            self.initial_visits = k["initial_visits"]
+
+            self.q_values = pickle.loads(k["q_values"])
+            self.arm_counts = pickle.loads(k["arm_counts"])
+            self.arm_rewards = pickle.loads(k["arm_rewards"])
+            self.rewards = k["rewards"]
+            self.cum_rewards = k["cum_rewards"]
+
 
     def act(self):
         count = 0
@@ -67,10 +83,38 @@ class AI(object):
         connector.collection(Collections.STATE).replace_one(
             {"id": self.env.id}, state_update.dict()
         )
+        if connector.collection(Collections.AI).find_one({"id": self.env.id}) is None:
+            connector.collection(Collections.AI).insert_one({
+                "id": self.env.id,
+                "initial_q": self.initial_q,
+                "initial_visits": self.initial_visits,
+                "q_values": Binary(pickle.dumps(self.q_values, protocol=2), subtype=128),
+                "arm_counts": Binary(pickle.dumps(self.arm_counts, protocol=2), subtype=128),
+                "arm_rewards": Binary(pickle.dumps(self.arm_rewards, protocol=2), subtype=128),
+                "rewards": self.rewards,
+                "cum_rewards": self.cum_rewards
+            })
+        else:
+            ai = {
+                "id": self.env.id,
+                "initial_q": self.initial_q,
+                "initial_visits": self.initial_visits,
+                "q_values": Binary(pickle.dumps(self.q_values, protocol=2), subtype=128),
+                "arm_counts": Binary(pickle.dumps(self.arm_counts, protocol=2), subtype=128),
+                "arm_rewards": Binary(pickle.dumps(self.arm_rewards, protocol=2), subtype=128),
+                "rewards": self.rewards,
+                "cum_rewards": self.cum_rewards
+            }
+            connector.collection(Collections.AI).replace_one(
+                {"id": self.env.id}, ai
+            )
+
         return {
             "arm_counts": self.arm_counts,
             "rewards": self.rewards,
             "cum_rewards": self.cum_rewards,
+            "q_values": self.q_values,
+            "arm_rewards": self.arm_rewards
         }
 
 
@@ -146,19 +190,20 @@ class State(Campaign):
         self.k_arms = state.k_arms
 
         self.stopped = state.stopped
-        if initial_allocation == 0:
+        if initial_allocation == 0 and state.current_time == 0:
             self.initial_allocation()
         else:
-            for campaign in d:
-                self.budget_allocation[str(campaign.id)] = initial_allocation[
-                    campaign.id
-                ]
+            if initial_allocation:
+                for campaign in d:
+                    self.budget_allocation[str(campaign.id)] = initial_allocation[
+                        campaign.id
+                    ]
 
     def next_timestamp(self):
         self.current_time += 1
         self.remaining -= self.current_budget
         if self.remaining <= 0:
-            raise HTTPException(400, "No budget left")
+            raise HTTPException("No budget left")
         # increase the capacity of an agent to take significant budget decisions
         self.step *= 1.001
 
@@ -267,7 +312,7 @@ class State(Campaign):
                 )
         # round the budget to avoid RuntimeWarning: invalid value encountered in double_scalars
         for campaign in temp_budget:
-            temp_budget[campaign] = round(temp_budget[campaign], 8)
+            temp_budget[str(campaign)] = round(temp_budget[str(campaign)], 8)
         # validate that the budget is corrent before updating it
         if self.validate_budget(temp_budget):
             # update budget
