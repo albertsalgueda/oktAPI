@@ -202,6 +202,7 @@ class State(Campaign):
         self.current_time += 1
         self.remaining -= self.current_budget
         if self.remaining <= 0:
+            connector.collection(Collections.AI).delete_one({"id": self.id})
             raise HTTPException("No budget left")
         # increase the capacity of an agent to take significant budget decisions
         self.step *= 1.001
