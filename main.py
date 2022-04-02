@@ -148,7 +148,6 @@ class Campaign:
     def change_budget(self, increment):
         # increment debe ser un valor numerico para editar el ( daily budget )
         self.budget = self.budget + increment
-        print(self.budget)
         connector.collection(Collections.CAMPAIGN).update_one({
             "id": self.id
         },
