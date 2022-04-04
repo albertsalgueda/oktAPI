@@ -19,10 +19,8 @@ class CampaignIn(BaseModel):
         return v
 
     budget: float = Field(None)  # represents daily budget
-    spent: float = Field(None)  # represents total spent
-    impressions: int = Field(None)
-    conversions: int = Field(None)
-    roas: float = Field(None)
+    spent: list = Field(None)  # represents total spent
+    conversion_value: list = Field(None) #  represents Purchase Conversion Value
 
 
 class CampaignUpdate(BaseModel):

@@ -3,7 +3,7 @@ from typing import List
 
 from .auth import get_current_user
 from utils.db_connector import DBConnector, Collections
-from models.campains import (
+from models.campaign import (
     CampaignIn,
     CampaignOut,
     CampaignUpdate,
@@ -26,7 +26,6 @@ async def get_campaigns(
         CampaignOut(**campaign)
         for campaign in connector.collection(Collections.CAMPAIGN).find({})
     ]
-
 
 @router.post(
     "/campaign/{id}", description="get campaign by id", tags=["campaigns"]
