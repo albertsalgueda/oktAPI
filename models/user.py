@@ -15,6 +15,7 @@ class User(BaseModel):
 
     username: str
     scopes: List[str]
+    firstLogin: bool = Field(True)
 
 class SecurityScopes(str, Enum):
     """Enumeration for allowed scopes."""
@@ -121,7 +122,7 @@ class UserDelete(BaseModel):
 
         if user is None:
             raise ValueError("username does not exist.")
-        elif "admin" is user["scopes"]:
+        elif "admin" == user["scopes"]:
             raise ValueError("can not delete admin user.")
 
         return v
@@ -132,6 +133,7 @@ class UserDB(BaseModel):
     password: str = Field(None)
     scopes:  List[str] = []
     tokens: List = []
+    firstLogin: bool = Field(True)
 
 class TokenDelete(BaseModel):
     """Token delete model."""
