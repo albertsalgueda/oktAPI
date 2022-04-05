@@ -10,7 +10,6 @@ from models.state import StateIn, StateDB, StateOut, StateDelete, StateUpdate
 from models.user import User
 from main import State
 
-
 router = APIRouter()
 connector = DBConnector()
 
@@ -40,7 +39,6 @@ async def get_state(
         for state in connector.collection(Collections.STATE).find({})
     ]
 
-
 @router.delete("/state", description="Delete state.", tags=["state"])
 async def delete_state(
     state: StateDelete,
@@ -65,7 +63,6 @@ async def get_one_state(
         }
     return StateOut(**state)
 
-
 @router.get(
     "/state/{id}/next", description="Get budget.", tags=["state"]
 )
@@ -78,21 +75,21 @@ async def get_budget(
     if state is None:
         return {"success": False}
     state1 = StateOut(**state)
-    # inital_allocation = [0.25, 0.25, 0.5]
     try:
         state = State(
             state1
         )
-        ai = AI(id, state, 10, 10)
-        d = ai.act()
+        ai = AI(id, state, 1, 10) #TODO Explain this better
+        d = ai.act() # Why do you create a d variable ? 
         state = connector.collection(Collections.STATE).find_one({"id": id})
         state2 = StateOut(**state)
     except Exception as err:
         return {"message": f"{err}"}
     return {
-        "remaining budget": state2.remaining,
+        "current budget": state2.current_budget,
         "current time": state2.current_time,
         "budget allocation": state2.budget_allocation,
+        "remaining budget": state2.remaining
     }
 
 @router.get("/state/{id}/budget", description="Get budget allocation.", tags=["state"])
@@ -100,7 +97,18 @@ def get_budget_allocation(
     id: int,
     user: User = Security(get_current_user, scopes=["read"]),
 ):
-    """Return budget allocation."""
+    """Return daily budget allocation."""
+    #TODO
+    """
+    Here we actually want to return the absolute budget of campaigns. 
+    Code idea:
+
+    daily_allocation = {}
+    for campaign in state.campaigns:
+        daile_allocation[campaign.id] = campaign.budget
+    return daily_allocation
+
+    """
     state = connector.collection(Collections.STATE).find_one({"id": id})
     state = StateOut(**state)
     return state.budget_allocation

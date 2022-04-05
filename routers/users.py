@@ -39,7 +39,6 @@ async def get_users(
         )
     ]
 
-
 @router.post(
     "/users",
     description="Create new user.",
