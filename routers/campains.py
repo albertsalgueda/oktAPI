@@ -3,7 +3,7 @@ from typing import List
 
 from .auth import get_current_user
 from utils.db_connector import DBConnector, Collections
-from models.campains import (
+from models.campaign import (
     CampaignIn,
     CampaignOut,
     CampaignUpdate,

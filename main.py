@@ -1,6 +1,6 @@
 from http.client import HTTPException
 import random
-from models.campains import CampaignDB
+from models.campaign import CampaignDB
 from models.state import StateDB, StateUpdate
 import numpy as np
 import matplotlib.pyplot as plt
@@ -45,7 +45,7 @@ class AI(object):
         old_estimate = 0.0
         arm = np.argmax(self.q_values)
         reward = self.env.take_action(arm, self.q_values)
-        print(f"The rewards at timestamp {self.env.current_time} is {reward}")
+        #print(f"The rewards at timestamp {self.env.current_time} is {reward}")
         # sum one to the arm that was choosen
         self.arm_counts[arm] = self.arm_counts[arm] + 1
         # assign rewards for all arms
@@ -54,7 +54,6 @@ class AI(object):
             self.q_values[arm] = self.q_values[arm] + (
                 1 / self.arm_counts[arm]
             ) * (reward[arm] - self.q_values[arm])
-        # print(self.q_values)
         self.rewards.append(sum(reward))
         count += 1
         current_estimate = old_estimate + (1 / count) * (
@@ -119,29 +118,22 @@ class AI(object):
 
 
 class Campaign:
-    def __init__(self, id, budget, spent, impressions, conversions, roi):
-        # falta determinar como podemos saber el tiempo que lleva la campaña
-        self.id = id
-        self.budget = budget  # daily budget
-        self.spent = spent
-        self.impressions = impressions
-        self.conversions = conversions
-        self.roi = roi
+    def __init__(self,id,budget,spent,conversion_value,roi):
+        self.id = id    
+        self.budget = budget # daily budget
+        self.spent = [].append(spent) #spent across time steps
+        self.conversion_value = [].append(conversion_value) #conversion value across time steps  
 
-    def update(self, impressions, conversions, roi):
-        self.spent += self.budget
-        self.impressions += int(impressions)
-        self.conversions += int(conversions)
-        self.roi = float(roi)
+    def update(self, new_spent, new_value):
+        self.spent.append(new_spent)
+        self.conversion_value.append(new_value)
         connector.collection(Collections.CAMPAIGN).update_one({
             "id": self.id
         },
         {
             "$set":{
                 "spent": self.spent,
-                "impressions": self.impressions,
-                "conversions": self.conversions,
-                "roas": self.roi
+                "conversion_value": self.conversion_value
             }
         })
 
@@ -160,7 +152,7 @@ class Campaign:
 
 class State(Campaign):
     def __init__(
-        self, state:StateDB, initial_allocation=0
+        self, state:StateDB, initial_allocation=None
     ):
         self.id = state.id
         self.budget = state.budget
@@ -189,7 +181,7 @@ class State(Campaign):
         self.k_arms = state.k_arms
 
         self.stopped = state.stopped
-        if initial_allocation == 0 and state.current_time == 0:
+        if initial_allocation == None and state.current_time == 0:
             self.initial_allocation()
         else:
             if initial_allocation:
@@ -212,14 +204,10 @@ class State(Campaign):
             return list(np.zeros(len(self.budget_allocation)))
         rewards = []
         for campaign in self.campaigns:
-            rewards.append(
-                campaign.roas
-                * self.current_budget
-                * self.budget_allocation[str(campaign.id)]
-            )
-        # norm = [float(i)/sum(rewards) for i in rewards]
+            rewards.append(campaign.conversion_value[-1])
+        norm = [float(i)/sum(rewards) for i in rewards] #normalize rewards 
         # print(f'The rewards at timestamp {self.current_time} is {rewards}')
-        return rewards
+        return norm
 
     def take_action(self, arm, q_values):
         random_action = []

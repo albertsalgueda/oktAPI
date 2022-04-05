@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, validator
 from typing import Dict, List
 from utils.db_connector import DBConnector, Collections
-from .campains import CampaignDB
+from .campaign import CampaignDB
 
 connector = DBConnector()
 
