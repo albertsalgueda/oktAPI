@@ -51,13 +51,13 @@ async def delete_state(
     return {"success": True}
 
 
-@router.post("/state/{id}", description="get state by id", tags=["state"])
+@router.get("/state/{id}", description="get state by id", tags=["state"])
 async def get_one_state(
     id: int,
     user: User = Security(get_current_user, scopes=["read"]),
 ):
     """get state."""
-    state = connector.collection(Collections.STATE).find({"id": id})
+    state = connector.collection(Collections.STATE).find_one({"id": id})
     if state is None:
         return {
             "success": False,

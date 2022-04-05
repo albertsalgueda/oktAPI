@@ -28,7 +28,7 @@ async def get_campaigns(
     ]
 
 
-@router.post(
+@router.get(
     "/campaign/{id}", description="get campaign by id", tags=["campaigns"]
 )
 async def get_one_campaign(
