@@ -86,7 +86,7 @@ async def get_budget(
             state1
         )
         ai = AI(id, state, 1, 10) 
-        ai.act() 
+        d = ai.act() 
         state = connector.collection(Collections.STATE).find_one({"id": id}) #Checking State Object 
         state2 = StateOut(**state)
     except Exception as err:

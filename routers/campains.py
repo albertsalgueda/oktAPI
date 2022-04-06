@@ -68,7 +68,7 @@ async def delete_campaigns(
     return {"success": True}
 
 
-@router.patch("/campaign", description="update campaigns", tags=["campaigns"])
+@router.patch("/campaign/{id}", description="update campaign data", tags=["campaigns"])
 async def update_campaigns(
     campaign: CampaignUpdate,
     user: User = Security(get_current_user, scopes=["write"]),

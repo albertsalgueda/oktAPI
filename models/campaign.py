@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, validator
-
+from typing import List
 from utils.db_connector import DBConnector, Collections
 
 connector = DBConnector()
@@ -19,9 +19,8 @@ class CampaignIn(BaseModel):
         return v
 
     budget: float = Field(None)  # represents daily budget
-    spent: list = Field(None)  # represents total spent
-    conversion_value: list = Field(None) #  represents Purchase Conversion Value
-
+    spent: List = Field([])  # represents total spent
+    conversion_value: List = Field([]) #  represents Purchase Conversion Value
 
 class CampaignUpdate(BaseModel):
     """Compaign update model."""
@@ -34,22 +33,18 @@ class CampaignUpdate(BaseModel):
             raise ValueError(f"{v} should be exist")
         return v
 
-    budget: float = Field(None)  # represents daily budget
-    spent: float = Field(None)  # represents total spent
-    impressions: int = Field(None)
-    conversions: int = Field(None)
-    roas: float = Field(None)
+    #budget: float = Field(None)  
+    spent: List = Field([])  # represents total spent
+    conversion_value: List = Field([]) #  represents Purchase Conversion Value
 
 
 class CampaignOut(BaseModel):
     """Fetching parameters from DB."""
 
     id: int = Field(...)
-    budget: float = Field(None)  # represents daily budget
-    spent: float = Field(None)  # represents total spent
-    impressions: int = Field(None)
-    conversions: int = Field(None)
-    roas: float = Field(None)
+    budget: float = Field(...)  # represents daily budget
+    spent: List = Field(...)  # represents total spent
+    conversion_value: List = Field(...) 
 
 
 class CampaignDB(BaseModel):
@@ -57,10 +52,8 @@ class CampaignDB(BaseModel):
 
     id: int = Field(...)
     budget: float = Field(...)  # represents daily budget
-    spent: float = Field(...)  # represents total spent
-    impressions: int = Field(...)
-    roas: float = Field(...)
-
+    spent: List = Field(...)  # represents total spent
+    conversion_value: List = Field(...)
 
 class CampaignDelete(BaseModel):
     """Delete campaign model."""

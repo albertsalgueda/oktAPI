@@ -93,7 +93,7 @@ class AI(object):
             connector.collection(Collections.AI).replace_one(
                 {"id": self.env.id}, ai
             )
-        return 0
+        return 'success'
 
 class Campaign:
     def __init__(self,id,budget,spent,conversion_value):
