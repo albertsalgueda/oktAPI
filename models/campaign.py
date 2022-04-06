@@ -42,7 +42,7 @@ class CampaignUpdate(BaseModel):
 
 
 class CampaignOut(BaseModel):
-    """Outcoming compaign model."""
+    """Fetching parameters from DB."""
 
     id: int = Field(...)
     budget: float = Field(None)  # represents daily budget
@@ -53,7 +53,7 @@ class CampaignOut(BaseModel):
 
 
 class CampaignDB(BaseModel):
-    """Outcoming compaign model."""
+    """Mapping campaign attributes into campaign class."""
 
     id: int = Field(...)
     budget: float = Field(...)  # represents daily budget

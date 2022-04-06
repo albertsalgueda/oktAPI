@@ -13,7 +13,8 @@ connector = DBConnector()
 
 class AI(object):
     def __init__(self, id, env, initial_q, initial_visits):
-        k = connector.collection(Collections.AI).find_one({"id": env.id})
+        k = connector.collection(Collections.AI).find_one({"id": env.id}) #mapping State to AI | State.id must be equal to AI.id
+        #IF AI() has not been created
         if k is None:
             self.id = id,
             self.env = env
@@ -23,9 +24,8 @@ class AI(object):
             self.q_values = np.ones(self.env.k_arms) * self.initial_q
             self.arm_counts = np.ones(self.env.k_arms) * self.initial_visits
             self.arm_rewards = np.zeros(self.env.k_arms)
-            
-            self.rewards = [0.0]
-            self.cum_rewards = [0.0]
+
+        # If we alreaddy created AI(), update values from DB 
         else:
             self.id = k["id"],
             self.env = env
@@ -35,34 +35,23 @@ class AI(object):
             self.q_values = pickle.loads(k["q_values"])
             self.arm_counts = pickle.loads(k["arm_counts"])
             self.arm_rewards = pickle.loads(k["arm_rewards"])
-            self.rewards = k["rewards"]
-            self.cum_rewards = k["cum_rewards"]
 
     def act(self):
-        count = 0
-        old_estimate = 0.0
         arm = np.argmax(self.q_values)
         reward = self.env.take_action(arm, self.q_values)
-        #print(f"The rewards at timestamp {self.env.current_time} is {reward}")
-        # sum one to the arm that was choosen
         self.arm_counts[arm] = self.arm_counts[arm] + 1
-        # assign rewards for all arms
         for arm in range(self.env.k_arms):
             self.arm_rewards[arm] = self.arm_rewards[arm] + reward[arm]
             self.q_values[arm] = self.q_values[arm] + (
                 1 / self.arm_counts[arm]
             ) * (reward[arm] - self.q_values[arm])
-        self.rewards.append(sum(reward))
-        count += 1
-        current_estimate = old_estimate + (1 / count) * (
-            sum(reward) - old_estimate
-        )
-        self.cum_rewards.append(current_estimate)
-        old_estimate = current_estimate
-        
-        cam = []
+        """
+        Storing everything into database
+        """
+        cam = [] # Crate a list with campaign Id
         for campaign in self.env.campaigns:
-            cam.append(campaign.id)
+            cam.append(campaign.id) 
+        # Mapping fields and validating input
         state_update = StateUpdate(
             id=self.env.id,
             budget=self.env.budget,
@@ -77,9 +66,11 @@ class AI(object):
             k_arms=self.env.k_arms,
             stopped=self.env.stopped
         )
+        # Updating data 
         connector.collection(Collections.STATE).replace_one(
             {"id": self.env.id}, state_update.dict()
         )
+        # If there is no AI() created, insert directly to database --> No validation here
         if connector.collection(Collections.AI).find_one({"id": self.env.id}) is None:
             connector.collection(Collections.AI).insert_one({
                 "id": self.env.id,
@@ -88,9 +79,8 @@ class AI(object):
                 "q_values": Binary(pickle.dumps(self.q_values, protocol=2), subtype=128),
                 "arm_counts": Binary(pickle.dumps(self.arm_counts, protocol=2), subtype=128),
                 "arm_rewards": Binary(pickle.dumps(self.arm_rewards, protocol=2), subtype=128),
-                "rewards": self.rewards,
-                "cum_rewards": self.cum_rewards
             })
+        # If the table has been updated --> replace it 
         else:
             ai = {
                 "id": self.env.id,
@@ -99,20 +89,11 @@ class AI(object):
                 "q_values": Binary(pickle.dumps(self.q_values, protocol=2), subtype=128),
                 "arm_counts": Binary(pickle.dumps(self.arm_counts, protocol=2), subtype=128),
                 "arm_rewards": Binary(pickle.dumps(self.arm_rewards, protocol=2), subtype=128),
-                "rewards": self.rewards,
-                "cum_rewards": self.cum_rewards
             }
             connector.collection(Collections.AI).replace_one(
                 {"id": self.env.id}, ai
             )
-
-        return {
-            "arm_counts": self.arm_counts,
-            "rewards": self.rewards,
-            "cum_rewards": self.cum_rewards,
-            "q_values": self.q_values,
-            "arm_rewards": self.arm_rewards
-        }
+        return 0
 
 class Campaign:
     def __init__(self,id,budget,spent,conversion_value):
@@ -182,7 +163,8 @@ class State(Campaign):
         self.step = state.step # Step represent the freedom of action. The % a campaign budget can be changed in 1 timestep. 
         self.k_arms = state.k_arms # K-arms represent campaigns 
         self.stopped = state.stopped # Stopped is a list of campaigns that have been stopped 
-        self.timestep = 12 #TODO Number of hours of each time step. 
+
+        self.timestep = 12 # Number of hours of each time step. 
         """
         We call initial_allocation to distribute budget proportionally if the user didn't provide an initial distribution 
         """
@@ -363,6 +345,7 @@ class State(Campaign):
         # turns a distribution into a daily value
         # X =  number of time steps in a day 
         # campaign daily budget = current budget * campaign%allocation * X
+        
         #TODO --> i am not sure this is saving into database
         x = 24/self.timestep
         for campaign in self.campaigns:

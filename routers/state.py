@@ -70,18 +70,24 @@ async def get_budget(
     id: int,
     user: User = Security(get_current_user, scopes=["read"]),
 ):
-    """add method."""
-    state = connector.collection(Collections.STATE).find_one({"id": id})
+    """
+    We map a State based on ID and user. User X, state.id = 0 ||| User Y, state.id = 0 
+    #TODO -> Each user has a different DB table.  
+    """
+    state = connector.collection(Collections.STATE).find_one({"id": id}) # get state object
+
     if state is None:
         return {"success": False}
-    state1 = StateOut(**state)
+
+    state1 = StateOut(**state) # mapping fields from db to state out
+
     try:
         state = State(
             state1
         )
-        ai = AI(id, state, 1, 10) #TODO Explain this better
-        d = ai.act() # Why do you create a d variable ? 
-        state = connector.collection(Collections.STATE).find_one({"id": id})
+        ai = AI(id, state, 1, 10) 
+        ai.act() 
+        state = connector.collection(Collections.STATE).find_one({"id": id}) #Checking State Object 
         state2 = StateOut(**state)
     except Exception as err:
         return {"message": f"{err}"}
@@ -105,10 +111,11 @@ def get_budget_allocation(
 
     daily_allocation = {}
     for campaign in state.campaigns:
-        daile_allocation[campaign.id] = campaign.budget
+        daily_allocation[campaign.id] = campaign.budget
     return daily_allocation
-
     """
     state = connector.collection(Collections.STATE).find_one({"id": id})
     state = StateOut(**state)
     return state.budget_allocation
+
+#

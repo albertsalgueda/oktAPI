@@ -1,5 +1,30 @@
-# How to run this app using python(3.10).
+# About the code
 
+### Common
+
+There is a class to add details on errors messages. ( I don't thing it has been used )
+
+### Models
+
+Classes for database. 
+
+### Routers
+
+Create API endpoints
+
+### Fast.py
+
+Import all the routers, and run the FastAPi
+
+### initialize.py
+
+We create an admin user. 
+
+### main.py
+
+
+
+# How to run this app using python(3.10).
 
 ## Step 1.
 
