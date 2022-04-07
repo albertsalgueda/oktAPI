@@ -114,8 +114,12 @@ def get_budget_allocation(
         daily_allocation[campaign.id] = campaign.budget
     return daily_allocation
     """
+    daily_allocation = {}
     state = connector.collection(Collections.STATE).find_one({"id": id})
     state = StateOut(**state)
-    return state.budget_allocation
+    for id in state.campaigns:
+        campaign = connector.collection(Collections.CAMPAIGN).find_one({"id": id})
+        daily_allocation[str(id)] = campaign.get("budget", 0)
+    return daily_allocation
 
 #

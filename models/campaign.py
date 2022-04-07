@@ -18,7 +18,7 @@ class CampaignIn(BaseModel):
 
         return v
 
-    budget: float = Field(None)  # represents daily budget
+    budget: float = Field(0)  # represents daily budget
     spent: List = Field([])  # represents total spent
     conversion_value: List = Field([]) #  represents Purchase Conversion Value
 
@@ -33,7 +33,7 @@ class CampaignUpdate(BaseModel):
             raise ValueError(f"{v} should be exist")
         return v
 
-    #budget: float = Field(None)  
+    budget: float = Field(None)  
     spent: List = Field([])  # represents total spent
     conversion_value: List = Field([]) #  represents Purchase Conversion Value
 
