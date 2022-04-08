@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, validator
 from typing import Dict, List
 from utils.db_connector import DBConnector, Collections
-from .campains import CampaignDB
+from .campaign import CampaignDB
 
 connector = DBConnector()
 
@@ -31,12 +31,11 @@ class StateIn(BaseModel):
             if connector.collection(Collections.CAMPAIGN).find_one({"id": ids}) is None:
                 raise ValueError(f"This id {ids} with campaign does not exist.")
         return v
-    current_time: int = Field(None)
-    history: Dict = Field({})
+    current_time: int = Field(None) #TODO
+    history: Dict = Field({}) 
     budget_allocation: Dict = Field({})
     step: float = 0.005
     stopped: List = Field([])
-
 
 class StateUpdate(BaseModel):
     """Updating state model."""
@@ -46,7 +45,7 @@ class StateUpdate(BaseModel):
     @validator("id")
     def id_must_be_exist(cls, v):
         if connector.collection(Collections.STATE).find_one({"id": v}) is None:
-            raise ValueError(f"{v} Should be exist")
+            raise ValueError(f"{v} Should exist")
         return v
 
     budget: float = Field(None)

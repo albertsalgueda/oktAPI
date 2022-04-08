@@ -63,9 +63,14 @@ async def _get_current_user(
         )
         if user is None:
             raise cred_exception
+        if user["firstLogin"] and not allow_on_first_login:
+                raise HTTPException(
+                    401, "Change the password before using this endpoint."
+                )
         return User(
             username=username,
             scopes=scopes,
+            firstLogin=user["firstLogin"]
         )
     except Exception as err:
         print(f"{err}")

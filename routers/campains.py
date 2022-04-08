@@ -3,7 +3,7 @@ from typing import List
 
 from .auth import get_current_user
 from utils.db_connector import DBConnector, Collections
-from models.campains import (
+from models.campaign import (
     CampaignIn,
     CampaignOut,
     CampaignUpdate,
@@ -28,7 +28,7 @@ async def get_campaigns(
     ]
 
 
-@router.post(
+@router.get(
     "/campaign/{id}", description="get campaign by id", tags=["campaigns"]
 )
 async def get_one_campaign(
@@ -68,13 +68,19 @@ async def delete_campaigns(
     return {"success": True}
 
 
-@router.patch("/campaign", description="update campaigns", tags=["campaigns"])
+@router.patch("/campaign/{id}", description="update campaign data", tags=["campaigns"])
 async def update_campaigns(
     campaign: CampaignUpdate,
     user: User = Security(get_current_user, scopes=["write"]),
 ):
     """update campaign."""
-    connector.collection(Collections.CAMPAIGN).replace_one(
-        {"id": campaign.id}, campaign.dict()
+    older = connector.collection(Collections.CAMPAIGN).find_one({"id": campaign.id})
+    if older.get("spent", []) != campaign.spent:
+        campaign.spent = older.get("spent", []) + campaign.spent
+    if older.get("conversion_value", []) != campaign.conversion_value:
+        campaign.conversion_value = older.get("conversion_value", []) + campaign.conversion_value
+    connector.collection(Collections.CAMPAIGN).update_one(
+        {"id": campaign.id}, 
+        {"$set": campaign.dict(exclude_none=True)}
     )
     return {"success": True}

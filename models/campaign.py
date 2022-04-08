@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, validator
-
+from typing import List
 from utils.db_connector import DBConnector, Collections
 
 connector = DBConnector()
@@ -18,12 +18,9 @@ class CampaignIn(BaseModel):
 
         return v
 
-    budget: float = Field(None)  # represents daily budget
-    spent: float = Field(None)  # represents total spent
-    impressions: int = Field(None)
-    conversions: int = Field(None)
-    roas: float = Field(None)
-
+    budget: float = Field(0)  # represents daily budget
+    spent: List = Field([])  # represents total spent
+    conversion_value: List = Field([]) #  represents Purchase Conversion Value
 
 class CampaignUpdate(BaseModel):
     """Compaign update model."""
@@ -36,33 +33,27 @@ class CampaignUpdate(BaseModel):
             raise ValueError(f"{v} should be exist")
         return v
 
-    budget: float = Field(None)  # represents daily budget
-    spent: float = Field(None)  # represents total spent
-    impressions: int = Field(None)
-    conversions: int = Field(None)
-    roas: float = Field(None)
+    budget: float = Field(None)  
+    spent: List = Field([])  # represents total spent
+    conversion_value: List = Field([]) #  represents Purchase Conversion Value
 
 
 class CampaignOut(BaseModel):
-    """Outcoming compaign model."""
-
-    id: int = Field(...)
-    budget: float = Field(None)  # represents daily budget
-    spent: float = Field(None)  # represents total spent
-    impressions: int = Field(None)
-    conversions: int = Field(None)
-    roas: float = Field(None)
-
-
-class CampaignDB(BaseModel):
-    """Outcoming compaign model."""
+    """Fetching parameters from DB."""
 
     id: int = Field(...)
     budget: float = Field(...)  # represents daily budget
-    spent: float = Field(...)  # represents total spent
-    impressions: int = Field(...)
-    roas: float = Field(...)
+    spent: List = Field(...)  # represents total spent
+    conversion_value: List = Field(...) 
 
+
+class CampaignDB(BaseModel):
+    """Mapping campaign attributes into campaign class."""
+
+    id: int = Field(...)
+    budget: float = Field(...)  # represents daily budget
+    spent: List = Field(...)  # represents total spent
+    conversion_value: List = Field(...)
 
 class CampaignDelete(BaseModel):
     """Delete campaign model."""
