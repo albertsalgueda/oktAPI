@@ -66,6 +66,7 @@ class AI(object):
             k_arms=self.env.k_arms,
             stopped=self.env.stopped
         )
+        print(state_update)
         # Updating data 
         connector.collection(Collections.STATE).replace_one(
             {"id": self.env.id}, state_update.dict()
@@ -238,7 +239,7 @@ class State(Campaign):
         """
         b = copy.deepcopy(self.budget_allocation)
         rewards = self.get_reward() # we compute rewards
-        self.history[self.current_time] = [b,rewards] # store previous distribution
+        self.history[str(self.current_time)] = [b,rewards] # store previous distribution
         print(f'Current state: {self.budget_allocation} at timestamp {self.current_time}')
         self.allocate_budget() # allocate this new budget distribution
         self.next_timestamp() # move time forward
@@ -351,6 +352,14 @@ class State(Campaign):
         for campaign in self.campaigns:
             campaign.budget = round(
                 self.current_budget * self.budget_allocation[str(campaign.id)]*x, 8
+            )
+            connector.collection(Collections.CAMPAIGN).update_one(
+                {"id": campaign.id},
+                {
+                    "$set":{
+                        "budget": campaign.budget
+                    }
+                }
             )
 
     @staticmethod
