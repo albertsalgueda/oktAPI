@@ -4,10 +4,13 @@ from routers import campains, auth, users, state
 from fastapi import Depends, FastAPI
 
 API_PREFIX = "/api"
+okt = {'name':'Oktopus','url':'https://www.oktopus.io/contact'}
 
 app = FastAPI(
     title="Budget Optimization API",
+    description = "Welcome! To test our API for free, contact us and you will be given a username and password.",
     version="1.0.0",
+    contact = okt,
     docs_url="/api/docs",
     openapi_url="/api/openapi.json"
 )
