@@ -28,20 +28,20 @@ We create an admin user.
 
 ## Step 1.
 
-### Add mongo connection string in utils/db_connector.py (in MongoClient())
+Add mongo connection string in utils/db_connector.py (in MongoClient())
 
 ## Step 2.
 
-### pip install -r requirements.txt
+pip install -r requirements.txt
 
 ## Step 3.
 
-### python initialize.py
+python initialize.py
 
 ## Step 4.
 
-### uvicorn fast:app (Make sure you are in OktAPI folder.)
+uvicorn fast:app (Make sure you are in OktAPI folder.)
 
 ## Step 5.
 
-### Open the url with /api and login with admin/admin.
+Open the url with /api and login with admin/admin.

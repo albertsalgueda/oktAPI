@@ -217,9 +217,12 @@ class State(Campaign):
         rewards = []
         for campaign in self.campaigns:
             rewards.append(campaign.conversion_value[-1])
-        norm = [float(i)/sum(rewards) for i in rewards] #normalize rewards 
-        # print(f'The rewards at timestamp {self.current_time} is {rewards}')
-        return norm
+        if any(rewards) == 0:
+            return rewards
+        else:
+            norm = [float(i)/sum(rewards) for i in rewards] #normalize rewards 
+            # print(f'The rewards at timestamp {self.current_time} is {rewards}')
+            return norm
 
     def take_action(self, arm, q_values):
         """

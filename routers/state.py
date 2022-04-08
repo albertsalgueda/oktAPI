@@ -104,16 +104,6 @@ def get_budget_allocation(
     user: User = Security(get_current_user, scopes=["read"]),
 ):
     """Return daily budget allocation."""
-    #TODO
-    """
-    Here we actually want to return the absolute budget of campaigns. 
-    Code idea:
-
-    daily_allocation = {}
-    for campaign in state.campaigns:
-        daily_allocation[campaign.id] = campaign.budget
-    return daily_allocation
-    """
     daily_allocation = {}
     state = connector.collection(Collections.STATE).find_one({"id": id})
     state = StateOut(**state)
@@ -122,4 +112,3 @@ def get_budget_allocation(
         daily_allocation[str(id)] = campaign.get("budget", 0)
     return daily_allocation
 
-#
