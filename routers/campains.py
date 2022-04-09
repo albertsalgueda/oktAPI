@@ -70,17 +70,18 @@ async def delete_campaigns(
 
 @router.patch("/campaign/{id}", description="update campaign data", tags=["campaigns"])
 async def update_campaigns(
+    id: int,
     campaign: CampaignUpdate,
     user: User = Security(get_current_user, scopes=["write"]),
 ):
     """update campaign."""
-    older = connector.collection(Collections.CAMPAIGN).find_one({"id": campaign.id})
+    older = connector.collection(Collections.CAMPAIGN).find_one({"id": id})
     if older.get("spent", []) != campaign.spent:
         campaign.spent = older.get("spent", []) + campaign.spent
     if older.get("conversion_value", []) != campaign.conversion_value:
         campaign.conversion_value = older.get("conversion_value", []) + campaign.conversion_value
     connector.collection(Collections.CAMPAIGN).update_one(
-        {"id": campaign.id}, 
+        {"id": id}, 
         {"$set": campaign.dict(exclude_none=True)}
     )
     return {"success": True}
