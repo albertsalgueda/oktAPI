@@ -24,16 +24,7 @@ class CampaignIn(BaseModel):
 
 class CampaignUpdate(BaseModel):
     """Compaign update model."""
-
-    id: int = Field(...)
-
-    @validator("id")
-    def id_must_be_exist(cls, v):
-        if connector.collection(Collections.CAMPAIGN).find_one({"id": v}) is None:
-            raise ValueError(f"{v} should be exist")
-        return v
-
-    budget: float = Field(None)  
+  
     spent: List = Field([])  # represents total spent
     conversion_value: List = Field([]) #  represents Purchase Conversion Value
 
