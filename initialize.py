@@ -11,7 +11,7 @@ if __name__ == "__main__":
         connector.collection(Collections.USERS).insert_one(
             {
                 "username": "admin",
-                "password": "$2y$12$RBcV6xWFhHucm4a1YRmQXuEZHqz9NadpMuzIB6xEIXOhg.QzngiiO",
+                "password": "$2b$12$KlzzQ8YSKQCI.rEE0vtku.HU6MqpqibsHXLG0IfDZOsqiBSGxw/Iq",
                 "scopes": ["admin", "read", "write", "me", "api"],
                 "tokens": [],
                 "firstLogin": True
