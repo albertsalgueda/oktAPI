@@ -147,3 +147,9 @@ class Token(BaseModel):
     token_type: str
     scopes: List[str]
     firstLogin: bool
+
+class AccountSettingsIn(BaseModel):
+    """The incoming account settings model."""
+
+    oldPassword: str = Field(...)
+    newPassword: str = Field(...)

@@ -7,9 +7,10 @@ from passlib.context import CryptContext
 from fastapi import Depends, APIRouter, HTTPException
 from fastapi.param_functions import Form
 from fastapi.security import OAuth2PasswordBearer, SecurityScopes
+from fastapi import Security
 
 from utils.db_connector import DBConnector, Collections
-from models.user import User, UserDB, Token
+from models.user import User, UserDB, Token, AccountSettingsIn
 
 router = APIRouter()
 crypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -54,6 +55,7 @@ async def _get_current_user(
         if username is None:
             raise cred_exception
         scopes = payload.get("scopes", [])
+        print(scopes)
         for scope in security_scopes.scopes:
             if scope not in scopes:
                 raise HTTPException(403, "Not enough permission.")
@@ -72,8 +74,8 @@ async def _get_current_user(
             scopes=scopes,
             firstLogin=user["firstLogin"]
         )
-    except Exception as err:
-        print(f"{err}")
+    except jwt.PyJWTError:
+        raise cred_exception
 
 async def get_current_user(
     security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme)
@@ -202,3 +204,42 @@ async def get_token(form_data: OAuth2PasswordRequestForm = Depends()):
         }
     except ValueError:
         raise HTTPException(400, "Could not verify username and password.")
+
+@router.patch(
+    "/account", tags=["Authentication"], description="Update account settings."
+)
+async def update_account_settings(
+    settings: AccountSettingsIn,
+    user: User = Security(
+        first_time_user,
+        scopes=["me"],
+    ),
+):
+    """Update the settings.
+
+    Args:
+        settings (SettingsIn): The settings object.
+        user (User, optional): The user object. Defaults to Security(get_current_user, scopes=["write"]).
+    """
+    msg = "false"
+    set_dict = {}
+    user_dict = connector.collection(Collections.USERS).find_one(
+        {"username": user.username}
+    )
+    if user_dict is None:
+        raise HTTPException(400, "Could not update the password.")
+    if not crypt_context.verify(settings.oldPassword, user_dict["password"]):
+        raise HTTPException(400, "Incorrect password.")
+    if settings.oldPassword == settings.newPassword:
+        raise HTTPException(
+            400, "New password can not be same as the old password."
+        )
+    set_dict["password"] = crypt_context.hash(settings.newPassword)
+    if set_dict != {}:  # i.e. the password was updated
+        if user.firstLogin:
+            set_dict["firstLogin"] = False
+        connector.collection(Collections.USERS).update_one(
+            {"username": user.username}, {"$set": set_dict}
+        )
+        msg = f"Password changed for the {user.username} user."
+    return {"msg": msg}
