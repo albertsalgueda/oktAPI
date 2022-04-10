@@ -1,3 +1,4 @@
+from http.client import HTTPException
 from fastapi import APIRouter, Security, Query
 from typing import List
 
@@ -51,7 +52,7 @@ async def create_campaigns(
     user: User = Security(get_current_user, scopes=["write"]),
 ):
     """Create campaign."""
-    print(campaign.dict())
+    #print(campaign.dict())
     add = connector.collection(Collections.CAMPAIGN).insert_one(
         campaign.dict()
     )
