@@ -14,7 +14,7 @@ if __name__ == "__main__":
                 "password": "$2b$12$KlzzQ8YSKQCI.rEE0vtku.HU6MqpqibsHXLG0IfDZOsqiBSGxw/Iq",
                 "scopes": ["admin", "read", "write", "me", "api"],
                 "tokens": [],
-                "firstLogin": True
+                "firstLogin": False
             }
         )
     else:
