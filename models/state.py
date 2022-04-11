@@ -58,13 +58,9 @@ class StateUpdate(BaseModel):
 
     @validator("campaigns")
     def validate_campaigns(cls, v):
-        states = connector.collection(Collections.STATE).find({})
         for ids in v:
             if connector.collection(Collections.CAMPAIGN).find_one({"id": ids}) is None:
                 raise ValueError(f"This id {ids} with campaign does not exist.")
-            for state in states:
-                if ids in state.get("campaigns", []):
-                    raise ValueError(f"This campaign already used by other state.")
         return v
 
     current_time: int = Field(None)
