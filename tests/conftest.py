@@ -9,9 +9,8 @@ from utils.db_connector import DBConnector, Collections
 @pytest.fixture(scope="session")
 def endpoints():
     return {
-        "base": "http://localhost:8000",
+        "base": "http://ec2-54-84-94-62.compute-1.amazonaws.com:8000/api/docs",
         }
-
 
 @pytest.fixture(scope="session")
 def run():
