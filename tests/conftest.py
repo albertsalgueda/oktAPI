@@ -9,7 +9,7 @@ from utils.db_connector import DBConnector, Collections
 @pytest.fixture(scope="session")
 def endpoints():
     return {
-        "base": "http://ec2-54-84-94-62.compute-1.amazonaws.com:8000/api/docs",
+        "base": "http://localhost:8000",
         }
 
 @pytest.fixture(scope="session")
@@ -31,7 +31,6 @@ def init_db():
     connector.collection(Collections.USERS).insert_one(
         {
             "username": "admin",
-            # "password"
             "password": "$2y$12$hwULodJIcg6ncfRgjWkqnOcJFEcSEk3zMiIyjxQLgRZwXbROVilF.",
             "scopes": ["read", "write", "me"],
             "firstLogin": True,
