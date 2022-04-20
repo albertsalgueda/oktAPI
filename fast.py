@@ -7,8 +7,8 @@ API_PREFIX = "/api"
 okt = {'name':'Oktopus','url':'https://www.oktopus.io/contact'}
 
 app = FastAPI(
-    title="Budget Optimization API",
-    description = "Welcome! To test our API for free, contact us and you will be given a username and password.",
+    title="OptimAI API",
+    description = "How does it work? \n First set up your campaigns and create a state \n Repeat: 1.- Update your campaign data \n 2.- Call /next to get a new budget allocation ",
     version="1.0.0",
     contact = okt,
     docs_url="/api/docs",

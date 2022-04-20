@@ -64,9 +64,9 @@ async def get_one_state(
     return StateOut(**state)
 
 @router.get(
-    "/state/{id}/next", description="Get budget.", tags=["state"]
+    "/state/{id}/next", description="Calls AI() to get a new budget allocation. Please update campaign data before calling this endpoint.", tags=["state"]
 )
-async def get_budget(
+async def get_new_allocation(
     id: int,
     user: User = Security(get_current_user, scopes=["read"]),
 ):
@@ -98,8 +98,8 @@ async def get_budget(
         "remaining budget": state2.remaining
     }
 
-@router.get("/state/{id}/budget", description="Get budget allocation.", tags=["state"])
-def get_budget_allocation(
+@router.get("/state/{id}/budget", description="Returns campaign's daily budget.", tags=["state"])
+def get_daily_budget(
     id: int,
     user: User = Security(get_current_user, scopes=["read"]),
 ):
