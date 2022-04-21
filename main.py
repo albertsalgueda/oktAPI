@@ -66,7 +66,6 @@ class AI(object):
             k_arms=self.env.k_arms,
             stopped=self.env.stopped
         )
-        print(state_update)
         # Updating data 
         connector.collection(Collections.STATE).replace_one(
             {"id": self.env.id}, state_update.dict()
@@ -99,9 +98,9 @@ class AI(object):
 class Campaign:
     def __init__(self,id,budget,spent,conversion_value):
         self.id = id    
-        self.budget = budget # daily budget
-        self.spent = [spent] #spent across time steps
-        self.conversion_value = [conversion_value] #conversion value across time steps  
+        self.budget = budget                                                    # current daily budget
+        self.spent = [spent]                                                    # spent across time steps
+        self.conversion_value = [conversion_value]                              # conversion value across time steps  
 
     def update(self, new_spent, new_value):
         """
@@ -120,7 +119,7 @@ class Campaign:
         })
 
     def change_budget(self, increment):
-        # increment debe ser un valor numerico para editar el ( daily budget )
+        # increment must be a numberic value
         self.budget = self.budget + increment
         connector.collection(Collections.CAMPAIGN).update_one({
             "id": self.id
@@ -138,9 +137,9 @@ class State(Campaign):
     def __init__(
         self, state:StateDB, initial_allocation=None
     ):
-        self.id = state.id # We assign an ID to deal with multiple CampaignGroup
-        self.budget = state.budget # We set up a total budget
-        self.time = state.time # We set up a total number of time steps to distribute the budget
+        self.id = state.id                                                      # State identifier
+        self.budget = state.budget                                              # Total budget
+        self.time = state.time                                                  # Total num of time steps
         """
         We create a list that will contain campaign objects specified by ID
         """
@@ -155,19 +154,20 @@ class State(Campaign):
                     )
                 )
             )
-        self.campaigns = d # we store that campaigns 
-        self.current_time = state.current_time  # We initialize current time 
-        self.current_budget = state.current_budget #TODO 
-        self.history = state.history # We create a dictionary with key: current_time value: budget_distribution
-        self.budget_allocation = state.budget_allocation # We create a dictionary with key: campaign ID value: % budget allocation
-        self.remaining = state.remaining # We create a variable to keep track of the remaining budget
-        self.step = state.step # Step represent the freedom of action. The % a campaign budget can be changed in 1 timestep. 
-        self.k_arms = state.k_arms # K-arms represent campaigns 
-        self.stopped = state.stopped # Stopped is a list of campaigns that have been stopped 
+        self.campaigns = d                                                      # we store that campaigns 
+        self.current_time = state.current_time                                  
+        self.current_budget = state.current_budget                          
+        self.history = state.history                                            # key: current_time value: budget_distribution
+        self.budget_allocation = state.budget_allocation                        # key: campaign ID value: % budget allocation
+        self.remaining = state.remaining                                        
+        self.step = state.step                                                  # Step represents the freedom of action. The % a campaign budget can be changed in 1 timestep. 
+        self.k_arms = state.k_arms                                              # K-arms = number campaigns 
+        self.stopped = state.stopped                                            # list of campaigns that have been stopped 
 
-        self.timestep = 12 # Number of hours of each time step. 
+        self.timestep = 12                                                      # Number of hours of each time step. 
         """
-        We call initial_allocation to distribute budget proportionally if the user didn't provide an initial distribution 
+        We call initial_allocation to distribute budget proportionally 
+        if the user didn't provide an initial distribution 
         """
         if initial_allocation == None and state.current_time == 0:
             self.initial_allocation()
@@ -177,13 +177,7 @@ class State(Campaign):
                     self.budget_allocation[str(campaign.id)] = initial_allocation[
                         campaign.id
                     ]
-    @staticmethod
-    def get_state(budget_allocation):
-        """
-        returns a tuple (0.33,0.33,0.33) at current time step. 
-        """
-        return tuple(budget_allocation.values())
-
+    
     def initial_allocation(self):
         """
         We distribute budget proportionally. 
@@ -196,12 +190,13 @@ class State(Campaign):
         self.history[str(self.current_time)] = [b, self.get_reward()]
         self.allocate_budget()
 
-    def next_timestamp(self):
+    def next_step(self):
         """
-        We move time forward, if there is no Budget Left, we stop. 
+        Calculate spent, check for overspent, adjust step size. 
         """
+        assert not self.overspent()
         self.current_time += 1
-        self.remaining -= self.current_budget
+        self.remaining -= self.calculate_spent()
         if self.remaining <= 0:
             connector.collection(Collections.AI).delete_one({"id": self.id})
             raise HTTPException("No budget left")
@@ -220,8 +215,7 @@ class State(Campaign):
         if any(rewards) == 0:
             return rewards
         else:
-            norm = [float(i)/sum(rewards) for i in rewards] #normalize rewards 
-            # print(f'The rewards at timestamp {self.current_time} is {rewards}')
+            norm = [float(i)/sum(rewards) for i in rewards] 
             return norm
 
     def take_action(self, arm, q_values):
@@ -230,10 +224,9 @@ class State(Campaign):
         """
         #if it is timestep 0, just wait. 
         if self.current_time < 1:
-            print('AI still has no data so no action taken(( ')
+            pass
         else:
-            print(f'AI is increasing budget of campaign {arm} ))')
-            self.act2(arm,q_values) # calls act2 action policy 2 ( 1 was shit )
+            self.act2(arm,q_values) 
         """
         we have a new baby, a new budget distribution. 
         now we want to store the new baby in self.history 
@@ -241,11 +234,10 @@ class State(Campaign):
         allocate budget and move time forward. 
         """
         b = copy.deepcopy(self.budget_allocation)
-        rewards = self.get_reward() # we compute rewards
-        self.history[str(self.current_time)] = [b,rewards] # store previous distribution
-        print(f'Current state: {self.budget_allocation} at timestamp {self.current_time}')
-        self.allocate_budget() # allocate this new budget distribution
-        self.next_timestamp() # move time forward
+        rewards = self.get_reward() 
+        self.history[str(self.current_time)] = [b,rewards] 
+        self.allocate_budget() 
+        self.next_step() 
         return rewards # return current rewards to the AI()
 
     def act2(self, arm, q_values):
@@ -267,8 +259,6 @@ class State(Campaign):
         stochastic process to choose and decrease another campaign 
         """
         # SOLUTION TO BUG ID 7
-        # print(f"---{len(population)-len(self.stopped)}")
-        # time.sleep(0.01)
         if len(population) - len(self.stopped) == 1:
             temp_budget[str(arm)] = 1
         else:
@@ -285,8 +275,6 @@ class State(Campaign):
             else:
                 norm = [float(i) / sum(q_values) for i in q_values]
                 decrease_prob = [1 - p for p in norm]
-                # print(f'norm is {norm}')
-                # print(f'population is {population}')
                 dec = int(
                     random.choices(population, weights=decrease_prob, k=1)[0]
                 )
@@ -298,10 +286,6 @@ class State(Campaign):
                         temp_budget[str(arm)] -= temp_budget[str(dec)]
                         # temp_budget[arm] -= step
                         temp_budget[str(dec)] = 0
-                        print(
-                            f"##### Campaign {dec} was stopped completely ###"
-                        )
-                        # TODO delete campaign from the state ( make it ignore it )
                         self.stopped.append(dec)
                     else:
                         temp_budget[str(dec)] -= step
@@ -323,15 +307,9 @@ class State(Campaign):
                         temp_budget[str(arm)] -= temp_budget[str(dec)]
                         temp_budget[str(arm)] -= step
                         temp_budget[str(dec)] = 0
-                        print(
-                            f"##### Campaign {dec} was stopped completely ###"
-                        )
                         self.stopped.append(dec)
                     else:
                         temp_budget[str(dec)] -= step
-                print(
-                    f"Ai has decreased campaign {dec} given probs {decrease_prob}"
-                )
         # round the budget to avoid RuntimeWarning: invalid value encountered in double_scalars
         for campaign in temp_budget:
             temp_budget[str(campaign)] = round(temp_budget[str(campaign)], 8)
@@ -342,15 +320,12 @@ class State(Campaign):
             # update budget
             self.budget_allocation = temp_budget
         else:
-            print(f"Chosen arm: {arm}, Stopped Campaigns: {self.stopped}")
             raise Exception(f"Budget is not valid, act2 policy has failed, Failed budget is {temp_budget}") #TODO --> why you did not use HTTPException
 
     def allocate_budget(self):
-        # turns a distribution into a daily value
-        # X =  number of time steps in a day 
-        # campaign daily budget = current budget * campaign%allocation * X
-        
-        #TODO --> i am not sure this is saving into database
+        """
+        edits campaigns' daily budget according to self.budget_allocation
+        """
         x = 24/self.timestep
         for campaign in self.campaigns:
             campaign.budget = round(
@@ -367,12 +342,6 @@ class State(Campaign):
 
     @staticmethod
     def validate_budget(budget_allocation):
-        """
-        here we validate budgets we tolerate 
-        a minimum of 95%
-        a maximum of 102.5%
-        -- +2.5% ===> maximum overspent allowed.  
-        """
         total = 0
         for campaign in budget_allocation.values():
             if campaign > 1:
@@ -383,7 +352,20 @@ class State(Campaign):
                 total += campaign
         total = round(total, 4)
         if total > 0.95 and total <= 1.025:
-            # it is better that we spend less than more.
             return True
         else:
             return False
+
+    def calculate_spent(self):
+        spent_this_time_step = 0
+        for campaign in self.campaigns:
+            spent_this_time_step += campaign.spent[-1]
+        return spent_this_time_step
+
+    def overspent(self):
+        total_spent = 0
+        for campaign in self.campaigns:
+            total_spent += sum(campaign.spent)
+        if total_spent > self.budget:
+            return True
+        else: return False
