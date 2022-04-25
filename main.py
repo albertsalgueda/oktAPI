@@ -165,6 +165,9 @@ class State(Campaign):
         self.stopped = state.stopped                                            # list of campaigns that have been stopped 
 
         self.timestep = 12                                                      # Number of hours of each time step. 
+        
+        assert len(self.campaigns)>1, 'No campaign group without campaigns'
+        
         """
         We call initial_allocation to distribute budget proportionally 
         if the user didn't provide an initial distribution 
