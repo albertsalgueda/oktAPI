@@ -175,7 +175,7 @@ class State(Campaign):
         if initial_allocation == None and state.current_time == 0:
             self.initial_allocation()
         else:
-            assert self.validate_budget(initial_allocation),"Budget Allocation is not valid"
+            #assert self.validate_budget(initial_allocation),"Budget Allocation is not valid"
             if initial_allocation:
                 for campaign in d:
                     self.budget_allocation[str(campaign.id)] = initial_allocation[

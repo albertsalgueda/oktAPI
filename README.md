@@ -1,4 +1,4 @@
-# About the code
+# OptimAI 1.1.1
 
 ### Common
 
