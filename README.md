@@ -22,7 +22,7 @@ We create an admin user.
 
 ### main.py
 
-
+Contains main logic of the program: Campaign(), State() and AI() classes.
 
 # How to run this app using python(3.10).
 

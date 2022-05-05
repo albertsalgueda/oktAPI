@@ -55,4 +55,8 @@ class CampaignDelete(BaseModel):
     def id_must_be_exist(cls, v):
         if connector.collection(Collections.CAMPAIGN).find_one({"id": v}) is None:
             raise ValueError(f"{v} not exist")
+        states = connector.collection(Collections.STATE).find({})
+        for state in states:
+            if v in state.get("campaigns", []):
+                raise ValueError("This campaign is already used by one of the state.")
         return v
